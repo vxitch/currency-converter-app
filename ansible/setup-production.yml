@@ -9,7 +9,7 @@
   become: yes
   vars:
     # Replace with your DockerHub username
-    dockerhub_user: "YOURDOCKERHUB"
+    dockerhub_user: "vxitch"
     image_name: "currency-converter-app"
     k8s_dir: "/home/ubuntu/k8s"
 

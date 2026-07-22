@@ -23,8 +23,8 @@ spec:
     spec:
       containers:
         - name: currency-converter
-          # Replace YOURDOCKERHUB with your DockerHub username
-          image: YOURDOCKERHUB/currency-converter-app:latest
+          # Replace vxitch with your DockerHub username
+          image: vxitch/currency-converter-app:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
