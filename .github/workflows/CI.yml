@@ -27,13 +27,13 @@ jobs:
           pip install -r requirements.txt
 
       # Task 4(c): Run each test file in a separate step
-      - name: Run empty input test (Task 2a)
+      - name: Run empty input test
         run: python -m unittest tests.test_empty_input
 
-      - name: Run non-numeric input test (Task 2b)
+      - name: Run non-numeric input test
         run: python -m unittest tests.test_non_numeric
 
-      - name: Run conversion tests (Task 2c)
+      - name: Run conversion tests
         run: python -m unittest tests.test_conversion
 
       # Task 4(d): Build a Docker image
