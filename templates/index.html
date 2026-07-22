@@ -31,7 +31,11 @@
         <button type="submit">Convert</button>
     </form>
 
-    {% if result %}
+    {% if error %}
+        <h2 style="color: red;">{{ error }}</h2>
+    {% endif %}
+
+    {% if result is not none %}
         <h2>Converted Amount: {{ result }}</h2>
     {% endif %}
 </body>
