@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: currency-converter-service
+  labels:
+    app: currency-converter
+spec:
+  # NodePort exposes the app on the node's IP so curl $(minikube ip):NODE_PORT works
+  type: NodePort
+  selector:
+    app: currency-converter
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+      nodePort: 30007

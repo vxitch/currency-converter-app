@@ -1,0 +1,84 @@
+---
+# Task 3: Preparing the Production Server
+# Run with: ansible-playbook -i inventory.ini setup-production.yml
+# This installs kubectl + minikube, deploys the image from DockerHub,
+# creates a service, and scales the deployment for rolling updates.
+
+- name: Prepare Production Server for Kubernetes deployment
+  hosts: production
+  become: yes
+  vars:
+    # Replace with your DockerHub username
+    dockerhub_user: "YOURDOCKERHUB"
+    image_name: "currency-converter-app"
+    k8s_dir: "/home/ubuntu/k8s"
+
+  tasks:
+    # ---- Task 3(a): Install kubectl ----
+    - name: Download kubectl binary
+      get_url:
+        url: "https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    - name: Verify kubectl is installed
+      command: kubectl version --client
+      register: kubectl_version
+      changed_when: false
+
+    # ---- Task 3(b): Install and start Minikube ----
+    - name: Download Minikube binary
+      get_url:
+        url: "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"
+        dest: /usr/local/bin/minikube
+        mode: '0755'
+
+    - name: Start Minikube (run as the ubuntu user, not root)
+      become: yes
+      become_user: ubuntu
+      shell: minikube start --driver=docker
+      args:
+        creates: /home/ubuntu/.minikube/profiles/minikube/config.json
+
+    # ---- Task 3(c): Deploy image from DockerHub to Kubernetes ----
+    - name: Create k8s manifest directory on the server
+      become_user: ubuntu
+      file:
+        path: "{{ k8s_dir }}"
+        state: directory
+
+    - name: Copy deployment manifest to server
+      become_user: ubuntu
+      copy:
+        src: ../k8s/deployment.yaml
+        dest: "{{ k8s_dir }}/deployment.yaml"
+
+    - name: Copy service manifest to server
+      become_user: ubuntu
+      copy:
+        src: ../k8s/service.yaml
+        dest: "{{ k8s_dir }}/service.yaml"
+
+    - name: Apply the deployment (pulls image from DockerHub)
+      become_user: ubuntu
+      command: kubectl apply -f {{ k8s_dir }}/deployment.yaml
+
+    # ---- Task 3(d): Create a Service for the application ----
+    - name: Apply the service
+      become_user: ubuntu
+      command: kubectl apply -f {{ k8s_dir }}/service.yaml
+
+    # ---- Task 3(e): Scale deployment to allow rolling updates ----
+    - name: Scale deployment to 3 replicas
+      become_user: ubuntu
+      command: kubectl scale deployment currency-converter --replicas=3
+
+    - name: Show running pods
+      become_user: ubuntu
+      command: kubectl get pods
+      register: pods_output
+      changed_when: false
+
+    - name: Display pods
+      debug:
+        var: pods_output.stdout_lines

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Currency Converter</title>
+</head>
+<body>
+    <h1>Currency Converter</h1>
+
+    <form method="POST">
+        <label>Amount:</label>
+        <input type="text" name="amount">
+
+        <br><br>
+
+        <label>From:</label>
+        <select name="from_currency">
+            <option value="USD">USD</option>
+            <option value="GBP">GBP</option>
+            <option value="EUR">EUR</option>
+        </select>
+
+        <label>To:</label>
+        <select name="to_currency">
+            <option value="USD">USD</option>
+            <option value="GBP">GBP</option>
+            <option value="EUR">EUR</option>
+        </select>
+
+        <br><br>
+
+        <button type="submit">Convert</button>
+    </form>
+
+    {% if result %}
+        <h2>Converted Amount: {{ result }}</h2>
+    {% endif %}
+</body>
+</html>

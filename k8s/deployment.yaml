@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currency-converter
+  labels:
+    app: currency-converter
+spec:
+  # Task 3(e): multiple replicas so rolling updates can be performed
+  replicas: 3
+  selector:
+    matchLabels:
+      app: currency-converter
+  # RollingUpdate strategy keeps the service available during updates
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: currency-converter
+    spec:
+      containers:
+        - name: currency-converter
+          # Replace YOURDOCKERHUB with your DockerHub username
+          image: YOURDOCKERHUB/currency-converter-app:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000

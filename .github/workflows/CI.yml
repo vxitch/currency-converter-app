@@ -1,0 +1,61 @@
+name: CI
+
+# Task 4(a): Detect changes to the repository
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      # Task 4(b): Install Flask and dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Task 4(c): Run each test file in a separate step
+      - name: Run empty input test (Task 2a)
+        run: python -m unittest tests.test_empty_input
+
+      - name: Run non-numeric input test (Task 2b)
+        run: python -m unittest tests.test_non_numeric
+
+      - name: Run conversion tests (Task 2c)
+        run: python -m unittest tests.test_conversion
+
+      # Task 4(d): Build a Docker image
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/currency-converter-app:latest .
+
+      # Task 4(e): Test that a container can be launched from the image
+      - name: Build test - launch container and verify it runs
+        run: |
+          docker run -d --name test-container -p 5000:5000 ${{ secrets.DOCKERHUB_USERNAME }}/currency-converter-app:latest
+          sleep 5
+          # Confirm the container is still running (did not crash on startup)
+          docker ps --filter "name=test-container" --filter "status=running" | grep test-container
+          docker stop test-container
+          docker rm test-container
+
+      # Task 4(f): Push image to DockerHub
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push image to DockerHub
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/currency-converter-app:latest

@@ -1,0 +1,45 @@
+name: CD
+
+# Task 4(g): Deploy passed builds to Kubernetes without disrupting service.
+# Runs only after the CI workflow completes successfully.
+# This job runs on a SELF-HOSTED runner installed on the Production Server,
+# so it has access to the local Minikube cluster.
+
+on:
+  workflow_run:
+    workflows: [ "CI" ]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    # Only deploy if CI succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Ensure Minikube is running
+        run: minikube status || minikube start --driver=docker
+
+      - name: Apply deployment and service (idempotent)
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+
+      # Rolling update without downtime: force pods to pull the new :latest image
+      - name: Trigger rolling update with new image
+        run: |
+          kubectl set image deployment/currency-converter \
+            currency-converter=${{ secrets.DOCKERHUB_USERNAME }}/currency-converter-app:latest
+          kubectl rollout restart deployment/currency-converter
+
+      - name: Wait for rollout to complete
+        run: kubectl rollout status deployment/currency-converter --timeout=120s
+
+      - name: Show deployed pods and service
+        run: |
+          kubectl get pods
+          kubectl get services
